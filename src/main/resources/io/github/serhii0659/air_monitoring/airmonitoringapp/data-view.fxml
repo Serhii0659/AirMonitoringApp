@@ -27,6 +27,9 @@
                         <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
                         <Label text="ПЕРЕГЛЯД ДАНИХ" styleClass="label-header" />
                         <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="usernameLabel" text="" styleClass="label-info"
+                               style="-fx-text-fill: #00d9ff; -fx-font-size: 14px; -fx-font-weight: bold;" />
                     </HBox>
 
                     <!-- Controls -->

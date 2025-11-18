@@ -15,6 +15,7 @@ public class DataViewController {
     @FXML private ComboBox<String> tablesBox;
     @FXML private TableView<ObservableList<String>> tableView;
     @FXML private Label infoLabel;
+    @FXML private Label usernameLabel;
     @FXML private Spinner<Integer> limitSpinner;
     @FXML private CheckBox showAllCheckBox;
     @FXML private CustomTitleBar titleBar;
@@ -61,7 +62,22 @@ public class DataViewController {
             titleBar.init("Air Monitoring - Дані", stage, true);
 
             // Update maximize icon after scene is fully loaded
-            Platform.runLater(() -> titleBar.updateMaximizeIcon());
+            Platform.runLater(() -> {
+                titleBar.updateMaximizeIcon();
+
+                // Setup Esc key handler for disconnect
+                stage.getScene().setOnKeyPressed(event -> {
+                    if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                        onDisconnect();
+                    }
+                });
+            });
+        }
+
+        // Display current username
+        String username = HelloApplication.getCurrentUsername();
+        if (usernameLabel != null && username != null && !username.isEmpty()) {
+            usernameLabel.setText("👤 " + username);
         }
 
         limitSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 10000, 500, 50));

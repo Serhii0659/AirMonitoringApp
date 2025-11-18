@@ -9,7 +9,8 @@ import javafx.stage.StageStyle;
 public class HelloApplication extends Application {
 
     private static Stage primaryStage;
-    private static boolean wasMaximized = true; // Remember window state
+    private static boolean wasMaximized = true;
+    private static String currentUsername = "";
 
     @Override
     public void start(Stage stage) {
@@ -97,5 +98,13 @@ public class HelloApplication extends Application {
 
     public static void setWasMaximized(boolean maximized) {
         wasMaximized = maximized;
+    }
+
+    public static String getCurrentUsername() {
+        return currentUsername;
+    }
+
+    public static void setCurrentUsername(String username) {
+        currentUsername = username;
     }
 }
