@@ -41,8 +41,10 @@
                     </children>
                 </GridPane>
 
-                <Button text="ПІДКЛЮЧИТИСЯ" onAction="#onConnect"
-                       styleClass="button-primary" prefWidth="200" />
+                <HBox alignment="CENTER">
+                    <Button text="ПІДКЛЮЧИТИСЯ" onAction="#onConnect"
+                           styleClass="button-primary" prefWidth="200" />
+                </HBox>
 
                 <Label fx:id="statusLabel" wrapText="true" alignment="CENTER" />
             </VBox>

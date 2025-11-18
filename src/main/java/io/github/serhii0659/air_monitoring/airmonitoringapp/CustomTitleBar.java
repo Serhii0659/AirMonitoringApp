@@ -29,7 +29,7 @@ public class CustomTitleBar extends HBox {
     /**
      * Initialize the title bar with stage and settings
      */
-    public void init(String title, Stage stage, boolean showMaximize) {
+    public void init(String title, Stage stage, boolean showMaximize, boolean showMinimize) {
         this.currentStage = stage;
 
         getChildren().clear();
@@ -43,24 +43,26 @@ public class CustomTitleBar extends HBox {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Window control buttons with Canvas icons
-        Button minimizeBtn = new Button();
-        javafx.scene.canvas.Canvas minIcon = WindowIcons.createMinimizeIcon();
-        minimizeBtn.setGraphic(minIcon);
-        minimizeBtn.getStyleClass().addAll("title-bar-button", "minimize-button");
-        minimizeBtn.setOnAction(e -> stage.setIconified(true));
-        minimizeBtn.setOnMouseEntered(e -> WindowIcons.updateIconColor(minIcon, javafx.scene.paint.Color.web("#00d9ff"), "minimize"));
-        minimizeBtn.setOnMouseExited(e -> WindowIcons.updateIconColor(minIcon, javafx.scene.paint.Color.web("#a8b2c1"), "minimize"));
+        // Minimize button (optional)
+        final Button minimizeBtn;
+        if (showMinimize) {
+            minimizeBtn = new Button();
+            javafx.scene.canvas.Canvas minIcon = WindowIcons.createMinimizeIcon();
+            minimizeBtn.setGraphic(minIcon);
+            minimizeBtn.getStyleClass().addAll("title-bar-button", "minimize-button");
+            minimizeBtn.setOnAction(e -> currentStage.setIconified(true));
+            minimizeBtn.setOnMouseEntered(e -> WindowIcons.updateIconColor(minIcon, javafx.scene.paint.Color.web("#00d9ff"), "minimize"));
+            minimizeBtn.setOnMouseExited(e -> WindowIcons.updateIconColor(minIcon, javafx.scene.paint.Color.web("#a8b2c1"), "minimize"));
+        } else {
+            minimizeBtn = null;
+        }
 
-        Button maximizeBtn = null;
         if (showMaximize) {
-            maximizeBtn = new Button();
+            final Button maximizeBtn = new Button();
             this.maximizeBtn = maximizeBtn; // Save reference
             javafx.scene.canvas.Canvas maxIcon = WindowIcons.createMaximizeIcon();
             maximizeBtn.setGraphic(maxIcon);
             maximizeBtn.getStyleClass().addAll("title-bar-button", "maximize-button");
-            Button finalMaximizeBtn = maximizeBtn;
-            javafx.scene.canvas.Canvas finalMaxIcon = maxIcon;
 
             // Store original size for restore
             final double[] originalSize = {1200, 700}; // Default size
@@ -70,51 +72,54 @@ public class CustomTitleBar extends HBox {
                 javafx.geometry.Rectangle2D bounds = screen.getVisualBounds();
 
                 // Check if currently "maximized" (covers most of screen)
-                boolean isCurrentlyMaximized = (stage.getWidth() >= bounds.getWidth() - 50 &&
-                                              stage.getHeight() >= bounds.getHeight() - 50);
+                boolean isCurrentlyMaximized = (currentStage.getWidth() >= bounds.getWidth() - 50 &&
+                                              currentStage.getHeight() >= bounds.getHeight() - 50);
 
                 if (isCurrentlyMaximized) {
                     // Restore to original size
-                    stage.setWidth(originalSize[0]);
-                    stage.setHeight(originalSize[1]);
-                    stage.centerOnScreen();
+                    currentStage.setWidth(originalSize[0]);
+                    currentStage.setHeight(originalSize[1]);
+                    currentStage.centerOnScreen();
 
                     // Update icon to maximize
                     javafx.scene.canvas.Canvas maxIcon2 = WindowIcons.createMaximizeIcon();
-                    finalMaximizeBtn.setGraphic(maxIcon2);
-                    finalMaximizeBtn.setOnMouseEntered(ev -> WindowIcons.updateIconColor(maxIcon2, javafx.scene.paint.Color.web("#00d9ff"), "maximize"));
-                    finalMaximizeBtn.setOnMouseExited(ev -> WindowIcons.updateIconColor(maxIcon2, javafx.scene.paint.Color.web("#a8b2c1"), "maximize"));
+                    maximizeBtn.setGraphic(maxIcon2);
+                    maximizeBtn.setOnMouseEntered(ev -> WindowIcons.updateIconColor(maxIcon2, javafx.scene.paint.Color.web("#00d9ff"), "maximize"));
+                    maximizeBtn.setOnMouseExited(ev -> WindowIcons.updateIconColor(maxIcon2, javafx.scene.paint.Color.web("#a8b2c1"), "maximize"));
                 } else {
                     // Save current size and maximize
-                    originalSize[0] = stage.getWidth();
-                    originalSize[1] = stage.getHeight();
+                    originalSize[0] = currentStage.getWidth();
+                    originalSize[1] = currentStage.getHeight();
 
-                    stage.setX(bounds.getMinX());
-                    stage.setY(bounds.getMinY());
-                    stage.setWidth(bounds.getWidth());
-                    stage.setHeight(bounds.getHeight());
+                    currentStage.setX(bounds.getMinX());
+                    currentStage.setY(bounds.getMinY());
+                    currentStage.setWidth(bounds.getWidth());
+                    currentStage.setHeight(bounds.getHeight());
 
                     // Update icon to restore
                     javafx.scene.canvas.Canvas restoreIcon = WindowIcons.createRestoreIcon();
-                    finalMaximizeBtn.setGraphic(restoreIcon);
-                    finalMaximizeBtn.setOnMouseEntered(ev -> WindowIcons.updateIconColor(restoreIcon, javafx.scene.paint.Color.web("#00d9ff"), "restore"));
-                    finalMaximizeBtn.setOnMouseExited(ev -> WindowIcons.updateIconColor(restoreIcon, javafx.scene.paint.Color.web("#a8b2c1"), "restore"));
+                    maximizeBtn.setGraphic(restoreIcon);
+                    maximizeBtn.setOnMouseEntered(ev -> WindowIcons.updateIconColor(restoreIcon, javafx.scene.paint.Color.web("#00d9ff"), "restore"));
+                    maximizeBtn.setOnMouseExited(ev -> WindowIcons.updateIconColor(restoreIcon, javafx.scene.paint.Color.web("#a8b2c1"), "restore"));
                 }
             });
-            maximizeBtn.setOnMouseEntered(e -> WindowIcons.updateIconColor(finalMaxIcon, javafx.scene.paint.Color.web("#00d9ff"), "maximize"));
-            maximizeBtn.setOnMouseExited(e -> WindowIcons.updateIconColor(finalMaxIcon, javafx.scene.paint.Color.web("#a8b2c1"), "maximize"));
+            maximizeBtn.setOnMouseEntered(e -> WindowIcons.updateIconColor(maxIcon, javafx.scene.paint.Color.web("#00d9ff"), "maximize"));
+            maximizeBtn.setOnMouseExited(e -> WindowIcons.updateIconColor(maxIcon, javafx.scene.paint.Color.web("#a8b2c1"), "maximize"));
         }
 
-        Button closeBtn = new Button();
+        final Button closeBtn = new Button();
         javafx.scene.canvas.Canvas closeIcon = WindowIcons.createCloseIcon();
         closeBtn.setGraphic(closeIcon);
         closeBtn.getStyleClass().addAll("title-bar-button", "close-button");
-        closeBtn.setOnAction(e -> stage.close());
+        closeBtn.setOnAction(e -> currentStage.close());
         closeBtn.setOnMouseEntered(e -> WindowIcons.updateIconColor(closeIcon, javafx.scene.paint.Color.WHITE, "close"));
         closeBtn.setOnMouseExited(e -> WindowIcons.updateIconColor(closeIcon, javafx.scene.paint.Color.web("#a8b2c1"), "close"));
 
         // Add all elements
-        getChildren().addAll(titleLabel, spacer, minimizeBtn);
+        getChildren().addAll(titleLabel, spacer);
+        if (minimizeBtn != null) {
+            getChildren().add(minimizeBtn);
+        }
         if (maximizeBtn != null) {
             getChildren().add(maximizeBtn);
         }
@@ -130,12 +135,12 @@ public class CustomTitleBar extends HBox {
             // Check if currently "maximized" by comparing window size with screen
             javafx.stage.Screen screen = javafx.stage.Screen.getPrimary();
             javafx.geometry.Rectangle2D bounds = screen.getVisualBounds();
-            boolean isCurrentlyMaximized = (stage.getWidth() >= bounds.getWidth() - 50 &&
-                                          stage.getHeight() >= bounds.getHeight() - 50);
+            boolean isCurrentlyMaximized = (currentStage.getWidth() >= bounds.getWidth() - 50 &&
+                                          currentStage.getHeight() >= bounds.getHeight() - 50);
 
             if (!isCurrentlyMaximized) {
-                stage.setX(event.getScreenX() - xOffset);
-                stage.setY(event.getScreenY() - yOffset);
+                currentStage.setX(event.getScreenX() - xOffset);
+                currentStage.setY(event.getScreenY() - yOffset);
             }
         });
 
@@ -143,8 +148,8 @@ public class CustomTitleBar extends HBox {
             // Show hand cursor only if not maximized
             javafx.stage.Screen screen = javafx.stage.Screen.getPrimary();
             javafx.geometry.Rectangle2D bounds = screen.getVisualBounds();
-            boolean isCurrentlyMaximized = (stage.getWidth() >= bounds.getWidth() - 50 &&
-                                          stage.getHeight() >= bounds.getHeight() - 50);
+            boolean isCurrentlyMaximized = (currentStage.getWidth() >= bounds.getWidth() - 50 &&
+                                          currentStage.getHeight() >= bounds.getHeight() - 50);
             setCursor(isCurrentlyMaximized ? Cursor.DEFAULT : Cursor.HAND);
         });
         setOnMouseExited(e -> setCursor(Cursor.DEFAULT));

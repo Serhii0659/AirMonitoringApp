@@ -38,38 +38,15 @@ public final class DbManager {
     public static List<String> getTables() {
         List<String> tables = new ArrayList<>();
         if (!isConnected()) return tables;
-        String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name";
+        String sql = "SELECT table_name FROM information_schema.tables " +
+                     "WHERE table_schema='public' AND table_type='BASE TABLE' " +
+                     "ORDER BY table_name";
         try (Statement st = connection.createStatement(); ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) tables.add(rs.getString(1));
         } catch (SQLException e) {
             lastError = e.getMessage();
         }
         return tables;
-    }
-
-    public static ResultSet fetchTable(String tableName, int limit) throws SQLException {
-        return fetchTable(tableName, limit, 0);
-    }
-
-    public static ResultSet fetchTable(String tableName, int limit, int offset) throws SQLException {
-        if (!isConnected()) throw new SQLException("Not connected");
-        // Basic safety: only allow letters, digits, underscore
-        if (!tableName.matches("[A-Za-z0-9_]+")) throw new SQLException("Неприпустима назва таблиці");
-
-        StringBuilder sql = new StringBuilder("SELECT * FROM " + tableName);
-        if (limit > 0) {
-            sql.append(" LIMIT ").append(limit);
-            if (offset > 0) {
-                sql.append(" OFFSET ").append(offset);
-            }
-        }
-
-        Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        return st.executeQuery(sql.toString());
-    }
-
-    public static int getTableRowCount(String tableName) throws SQLException {
-        return getTableRecordCount(tableName);
     }
 
     public static int getTableRecordCount(String tableName) throws SQLException {
@@ -82,5 +59,73 @@ public final class DbManager {
             }
             return 0;
         }
+    }
+
+    /**
+     * Fetch table data with limit and offset (used by DataLoadTask)
+     */
+    public static ResultSet fetchTable(String tableName, int limit, int offset) throws SQLException {
+        if (!isConnected()) throw new SQLException("Not connected");
+        if (!tableName.matches("[A-Za-z0-9_]+")) throw new SQLException("Неприпустима назва таблиці");
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM ").append(tableName);
+        if (limit > 0) {
+            sql.append(" LIMIT ").append(limit);
+            if (offset > 0) {
+                sql.append(" OFFSET ").append(offset);
+            }
+        }
+
+        Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        return st.executeQuery(sql.toString());
+    }
+
+    /**
+     * Get report data: list of stations with parameters (uses VIEW)
+     */
+    public static ResultSet getStationsReport() throws SQLException {
+        if (!isConnected()) throw new SQLException("Not connected");
+        String sql = "SELECT * FROM Station_Parameters_View ORDER BY \"Назва\"";
+        Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        return st.executeQuery(sql);
+    }
+
+    /**
+     * Get report data: measurement statistics for a station within time period
+     */
+    public static ResultSet getMeasurementStatisticsReport(String stationId, String startDate, String endDate) throws SQLException {
+        if (!isConnected()) throw new SQLException("Not connected");
+        if (!stationId.matches("[A-Za-z0-9_-]+")) throw new SQLException("Неприпустимий ID станції");
+
+        String sql = "SELECT " +
+                "mu.Title AS \"Назва параметру\", " +
+                "mu.Unit AS \"Одиниця виміру\", " +
+                "ROUND(AVG(m.Value)::numeric, 2) AS \"Середнє\", " +
+                "ROUND(MIN(m.Value)::numeric, 2) AS \"Мінімальне\", " +
+                "ROUND(MAX(m.Value)::numeric, 2) AS \"Максимальне\", " +
+                "COUNT(*) AS \"Кількість вимірювань\" " +
+                "FROM Measurment m " +
+                "JOIN Measured_Unit mu ON m.ID_Measured_Unit = mu.ID_Measured_Unit " +
+                "WHERE m.ID_Station = ? " +
+                "AND m.Time >= ?::timestamp " +
+                "AND m.Time <= ?::timestamp " +
+                "GROUP BY mu.Title, mu.Unit " +
+                "ORDER BY mu.Title";
+
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1, stationId);
+        ps.setString(2, startDate);
+        ps.setString(3, endDate);
+        return ps.executeQuery();
+    }
+
+    /**
+     * Get list of all stations for combobox
+     */
+    public static ResultSet getAllStations() throws SQLException {
+        if (!isConnected()) throw new SQLException("Not connected");
+        String sql = "SELECT ID_Station, Name, City FROM Station ORDER BY Name";
+        Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        return st.executeQuery(sql);
     }
 }

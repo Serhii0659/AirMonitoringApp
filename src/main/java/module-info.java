@@ -11,7 +11,11 @@ module io.github.serhii0659.air_monitoring.airmonitoringapp {
     requires eu.hansolo.tilesfx;
 
     requires java.sql;
-    requires org.postgresql.jdbc; // added for PostgreSQL driver
+    requires org.postgresql.jdbc;
+
+    // Apache POI for Excel reports
+    requires org.apache.poi.poi;
+    requires org.apache.poi.ooxml;
 
     opens io.github.serhii0659.air_monitoring.airmonitoringapp to javafx.fxml;
     exports io.github.serhii0659.air_monitoring.airmonitoringapp;

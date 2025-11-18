@@ -19,7 +19,16 @@ public class LoginController {
         // Initialize title bar
         Stage stage = HelloApplication.getPrimaryStage();
         if (titleBar != null && stage != null) {
-            titleBar.init("Air Monitoring - Вхід", stage, false);
+            titleBar.init("Air Monitoring - Вхід", stage, false, true);
+
+            // Remove rounded background for non-maximized window
+            Platform.runLater(() -> {
+                javafx.scene.Parent root = titleBar.getScene().getRoot();
+                if (root != null) {
+                    // Remove background radius for login window (never maximized)
+                    root.setStyle(root.getStyle() + "; -fx-background-radius: 0;");
+                }
+            });
         }
 
         // Setup Enter key handlers

@@ -37,6 +37,9 @@ java {
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.release.set(targetRelease)
+    options.compilerArgs.addAll(listOf(
+        "--add-reads", "io.github.serhii0659.air_monitoring.airmonitoringapp=ALL-UNNAMED"
+    ))
 }
 
 application {
@@ -63,6 +66,10 @@ dependencies {
     implementation("eu.hansolo:tilesfx:$tilesFxVersion") {
         exclude(group = "org.openjfx")
     }
+
+    // Apache POI for Excel reports
+    implementation("org.apache.poi:poi:5.5.0")
+    implementation("org.apache.poi:poi-ooxml:5.5.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")

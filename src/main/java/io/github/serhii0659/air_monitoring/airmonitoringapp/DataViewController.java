@@ -54,12 +54,15 @@ public class DataViewController {
     private static final int SORTING_THRESHOLD = 5000; // Disable sorting if more records
     private static final boolean USE_DB_SORTING = false; // Set to true when implementing DB sorting
 
+    // Reports window tracking - to prevent multiple instances
+    private static javafx.stage.Stage reportsWindow = null;
+
     @FXML
     private void initialize() {
         // Initialize title bar
         Stage stage = HelloApplication.getPrimaryStage();
         if (titleBar != null && stage != null) {
-            titleBar.init("Air Monitoring - Дані", stage, true);
+            titleBar.init("Air Monitoring - Дані", stage, true, true);
 
             // Update maximize icon after scene is fully loaded
             Platform.runLater(() -> {
@@ -71,6 +74,23 @@ public class DataViewController {
                         onDisconnect();
                     }
                 });
+
+                javafx.scene.Parent root = stage.getScene().getRoot();
+                if (root != null) {
+                    // Start with no rounded corners (default for data window which opens maximized)
+                    root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 0;");
+
+                    // Setup listener for maximized state to control background radius
+                    stage.maximizedProperty().addListener((obs, wasMaximized, isNowMaximized) -> {
+                        if (isNowMaximized) {
+                            // Remove rounded corners when maximized
+                            root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 0;");
+                        } else {
+                            // Add rounded corners when not maximized
+                            root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 10;");
+                        }
+                    });
+                }
             });
         }
 
@@ -129,6 +149,56 @@ public class DataViewController {
     }
 
     @FXML
+    private void onReports() {
+        // Check if reports window is already open
+        if (reportsWindow != null && reportsWindow.isShowing()) {
+            // Bring existing window to front
+            reportsWindow.toFront();
+            reportsWindow.requestFocus();
+            return;
+        }
+
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("reports-view.fxml"));
+            javafx.scene.Scene scene = new javafx.scene.Scene(loader.load(), 600, 600);
+
+            String css = getClass().getResource("styles.css").toExternalForm();
+            scene.getStylesheets().add(css);
+
+            javafx.stage.Stage reportsStage = new javafx.stage.Stage();
+            reportsStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+            reportsStage.setScene(scene);
+            reportsStage.setTitle("Air Monitoring - Звіти");
+            reportsStage.initModality(javafx.stage.Modality.NONE); // Non-modal window
+            reportsStage.initOwner(HelloApplication.getPrimaryStage());
+            reportsStage.setResizable(false);
+            reportsStage.centerOnScreen();
+
+            // Save reference to prevent multiple instances
+            reportsWindow = reportsStage;
+
+            // Clear reference when window is closed
+            reportsStage.setOnCloseRequest(event -> {
+                reportsWindow = null;
+            });
+
+            // Зв'язуємо згортання/розгортання вікон
+            Stage mainStage = HelloApplication.getPrimaryStage();
+            reportsStage.iconifiedProperty().addListener((obs, wasIconified, isNowIconified) -> {
+                if (mainStage != null) {
+                    mainStage.setIconified(isNowIconified);
+                }
+            });
+
+            reportsStage.show();
+        } catch (Exception e) {
+            infoLabel.setText("❌ Помилка відкриття форми звітів: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void onDisconnect() {
         // Cancel any running task
         if (currentTask != null && currentTask.isRunning()) {
@@ -143,7 +213,6 @@ public class DataViewController {
             boolean isMaximized = (stage.getWidth() >= bounds.getWidth() - 50 &&
                                  stage.getHeight() >= bounds.getHeight() - 50);
             HelloApplication.setWasMaximized(isMaximized);
-            System.out.println("Saving state on disconnect: " + isMaximized); // Debug
         }
 
         DbManager.disconnect();
@@ -506,12 +575,15 @@ public class DataViewController {
             tableView.setTableMenuButtonVisible(true);
             // Use normal resize policy for small datasets
             tableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+
+            // Customize table menu button (плюсик)
+            Platform.runLater(() -> customizeTableMenuButton(tableView));
         }
 
         // Update info label with sorting status
-        String sortingInfo = getSortingStatusInfo(result.data.size(), totalCount);
+        String sortingInfo = getSortingStatusInfo(result.data.size(), totalRecords);
         String info = String.format("✓ Таблиця: %s │ Показано: %,d з %,d записів%s",
-            table, result.data.size(), totalCount, sortingInfo);
+            table, result.data.size(), totalRecords, sortingInfo);
         infoLabel.setText(info);
     }
 
@@ -887,5 +959,35 @@ public class DataViewController {
                 nextPageBtn.setDisable(currentPage >= totalPages);
             }
         });
+    }
+
+    /**
+     * Customize table menu button (плюсик) for better visibility
+     */
+    private void customizeTableMenuButton(TableView<?> table) {
+        javafx.scene.Node menuButton = table.lookup(".show-hide-columns-button");
+        if (menuButton instanceof javafx.scene.control.Button) {
+            javafx.scene.control.Button button = (javafx.scene.control.Button) menuButton;
+
+            // Set larger size
+            button.setMinSize(35, 35);
+            button.setPrefSize(35, 35);
+
+            // Set style classes
+            button.getStyleClass().add("table-menu-button-custom");
+
+            // Customize tooltip
+            javafx.scene.control.Tooltip tooltip = new javafx.scene.control.Tooltip(
+                "Виберіть стовпці для відображення");
+            tooltip.setStyle(
+                "-fx-background-color: #1a1f3a; " +
+                "-fx-text-fill: #00d9ff; " +
+                "-fx-font-size: 13px; " +
+                "-fx-border-color: #00d9ff; " +
+                "-fx-border-width: 1px; " +
+                "-fx-padding: 8px;"
+            );
+            button.setTooltip(tooltip);
+        }
     }
 }

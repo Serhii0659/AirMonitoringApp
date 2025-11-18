@@ -23,7 +23,8 @@
                     </padding>
 
                     <!-- Header -->
-                    <HBox alignment="CENTER" spacing="10">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Region HBox.hgrow="ALWAYS" />
                         <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
                         <Label text="ПЕРЕГЛЯД ДАНИХ" styleClass="label-header" />
                         <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
@@ -37,6 +38,7 @@
                         <Label text="Таблиця:" styleClass="label-info" />
                         <ComboBox fx:id="tablesBox" prefWidth="280" />
                         <Button text="🔄 ОНОВИТИ" onAction="#onRefresh" />
+                        <Button text="📊 ЗВІТИ" onAction="#onReports" styleClass="button-primary" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Button text="⏏ ВІДКЛЮЧИТИСЬ" onAction="#onDisconnect" styleClass="button-danger" />
                     </HBox>
