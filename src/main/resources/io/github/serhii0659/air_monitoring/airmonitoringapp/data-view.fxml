@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import io.github.serhii0659.air_monitoring.airmonitoringapp.CustomTitleBar?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="io.github.serhii0659.air_monitoring.airmonitoringapp.DataViewController"
+      style="-fx-background-color: linear-gradient(to bottom, #0a0e27, #1a1f3a); -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 15, 0, 0, 5);">
+
+    <!-- Custom Title Bar -->
+    <CustomTitleBar fx:id="titleBar" />
+
+    <!-- Main Content in StackPane -->
+    <StackPane VBox.vgrow="ALWAYS">
+
+        <!-- Main Content -->
+        <BorderPane styleClass="border-pane">
+            <top>
+                <VBox spacing="12">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15"/>
+                    </padding>
+
+                    <!-- Header -->
+                    <HBox alignment="CENTER" spacing="10">
+                        <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
+                        <Label text="ПЕРЕГЛЯД ДАНИХ" styleClass="label-header" />
+                        <Label text="⚡" style="-fx-font-size: 28px; -fx-text-fill: #00d9ff;" />
+                    </HBox>
+
+                    <!-- Controls -->
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <Label text="Таблиця:" styleClass="label-info" />
+                        <ComboBox fx:id="tablesBox" prefWidth="280" />
+                        <Button text="🔄 ОНОВИТИ" onAction="#onRefresh" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="⏏ ВІДКЛЮЧИТИСЬ" onAction="#onDisconnect" styleClass="button-danger" />
+                    </HBox>
+
+                    <!-- Info Label -->
+                    <Label fx:id="infoLabel" styleClass="label-info" wrapText="true" />
+                </VBox>
+            </top>
+
+            <center>
+                <TableView fx:id="tableView" VBox.vgrow="ALWAYS" />
+            </center>
+
+            <bottom>
+                <VBox spacing="8">
+                    <!-- Pagination controls -->
+                    <HBox fx:id="paginationBox" alignment="CENTER" spacing="15" visible="false" managed="false">
+                        <padding>
+                            <Insets top="8" right="15" bottom="5" left="15"/>
+                        </padding>
+                        <Button fx:id="prevPageBtn" text="◀ Попередня" onAction="#onPreviousPage" styleClass="button-secondary" />
+                        <Label fx:id="pageLabel" text="Сторінка 1 з 1" styleClass="label-info" />
+                        <Button fx:id="nextPageBtn" text="Наступна ▶" onAction="#onNextPage" styleClass="button-secondary" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="totalRecordsLabel" text="Всього: 0 записів" styleClass="label-info" />
+                    </HBox>
+
+                    <!-- Settings row -->
+                    <HBox alignment="CENTER_RIGHT" spacing="12">
+                        <padding>
+                            <Insets top="5" right="15" bottom="12" left="15"/>
+                        </padding>
+                        <Label text="Ліміт:" styleClass="label-info" />
+                        <Spinner fx:id="limitSpinner" editable="true" prefWidth="120" />
+                        <CheckBox fx:id="showAllCheckBox" text="Показати всі" />
+                    </HBox>
+                </VBox>
+            </bottom>
+        </BorderPane>
+
+        <!-- Loading Overlay (initially hidden) -->
+        <VBox fx:id="loadingOverlay" alignment="CENTER" styleClass="loading-overlay"
+              visible="false" managed="false">
+            <VBox styleClass="loading-container" spacing="20" alignment="CENTER"
+                  maxWidth="400" maxHeight="300">
+                <Label text="⚡ ЗАВАНТАЖЕННЯ ДАНИХ ⚡" styleClass="label-title" />
+                <ProgressBar fx:id="progressBar" prefWidth="350" prefHeight="20" />
+                <Label fx:id="progressLabel" styleClass="label-info" wrapText="true"
+                       alignment="CENTER" maxWidth="350" />
+                <HBox spacing="15" alignment="CENTER">
+                    <Label fx:id="progressPercent" text="0%" styleClass="label-title" />
+                </HBox>
+                <Button fx:id="cancelButton" text="❌ СКАСУВАТИ" onAction="#onCancelLoad"
+                       styleClass="button-danger" prefWidth="150" />
+            </VBox>
+        </VBox>
+
+    </StackPane>
+</VBox>

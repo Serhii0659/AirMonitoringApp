@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Main-Class: io.github.serhii0659.air_monitoring.airmonitoringapp.Launche
+ r
