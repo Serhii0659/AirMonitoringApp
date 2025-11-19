@@ -170,7 +170,7 @@ public class DataViewController {
             reportsStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
             reportsStage.setScene(scene);
             reportsStage.setTitle("Air Monitoring - Звіти");
-            reportsStage.initModality(javafx.stage.Modality.NONE); // Non-modal window
+            reportsStage.initModality(javafx.stage.Modality.WINDOW_MODAL); // Block interaction with data window
             reportsStage.initOwner(HelloApplication.getPrimaryStage());
             reportsStage.setResizable(false);
             reportsStage.centerOnScreen();

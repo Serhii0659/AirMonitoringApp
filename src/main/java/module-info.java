@@ -17,6 +17,9 @@ module io.github.serhii0659.air_monitoring.airmonitoringapp {
     requires org.apache.poi.poi;
     requires org.apache.poi.ooxml;
 
+    // OpenPDF for PDF reports
+    requires com.github.librepdf.openpdf;
+
     opens io.github.serhii0659.air_monitoring.airmonitoringapp to javafx.fxml;
     exports io.github.serhii0659.air_monitoring.airmonitoringapp;
 }

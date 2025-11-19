@@ -1,8 +1,26 @@
 package io.github.serhii0659.air_monitoring.airmonitoringapp;
 
-import org.apache.poi.ss.usermodel.*;
+// OpenPDF imports for PDF generation
+import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
+// Apache POI imports for Excel generation
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.awt.Color;
 import java.io.FileOutputStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -28,17 +46,17 @@ public class ReportGenerator {
 
             // Create header style
             CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 12);
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
 
             // Create title style with wrap
             CellStyle titleStyle = workbook.createCellStyle();
-            Font titleFont = workbook.createFont();
+            org.apache.poi.ss.usermodel.Font titleFont = workbook.createFont();
             titleFont.setBold(true);
             titleFont.setFontHeightInPoints((short) 14);
             titleStyle.setFont(titleFont);
@@ -49,8 +67,8 @@ public class ReportGenerator {
             int currentRow = 0;
             String[] titleLines = data.title.split("\n");
             for (String line : titleLines) {
-                Row titleRow = sheet.createRow(currentRow++);
-                Cell titleCell = titleRow.createCell(0);
+                org.apache.poi.ss.usermodel.Row titleRow = sheet.createRow(currentRow++);
+                org.apache.poi.ss.usermodel.Cell titleCell = titleRow.createCell(0);
                 titleCell.setCellValue(line);
                 titleCell.setCellStyle(titleStyle);
                 titleRow.setHeightInPoints(20);
@@ -59,33 +77,33 @@ public class ReportGenerator {
             currentRow++; // Empty row after title
 
             // Create headers
-            Row headerRow = sheet.createRow(currentRow++);
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(currentRow++);
             for (int i = 0; i < data.headers.size(); i++) {
-                Cell cell = headerRow.createCell(i);
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
                 cell.setCellValue(data.headers.get(i));
                 cell.setCellStyle(headerStyle);
             }
 
             // Create data rows
             for (List<String> rowData : data.rows) {
-                Row row = sheet.createRow(currentRow++);
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(currentRow++);
                 for (int i = 0; i < rowData.size(); i++) {
-                    Cell cell = row.createCell(i);
+                    org.apache.poi.ss.usermodel.Cell cell = row.createCell(i);
                     cell.setCellValue(rowData.get(i));
                 }
             }
 
             // Add total row if this is statistics report (has numeric columns)
             if (data.hasTotalRow) {
-                Row totalRow = sheet.createRow(currentRow);
+                org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(currentRow);
 
                 CellStyle boldStyle = workbook.createCellStyle();
-                Font boldFont = workbook.createFont();
+                org.apache.poi.ss.usermodel.Font boldFont = workbook.createFont();
                 boldFont.setBold(true);
                 boldStyle.setFont(boldFont);
 
                 for (int i = 0; i < data.totalRowData.size(); i++) {
-                    Cell cell = totalRow.createCell(i);
+                    org.apache.poi.ss.usermodel.Cell cell = totalRow.createCell(i);
                     cell.setCellValue(data.totalRowData.get(i));
                     cell.setCellStyle(boldStyle);
                 }
@@ -102,6 +120,83 @@ public class ReportGenerator {
             try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
                 workbook.write(fileOut);
             }
+        }
+    }
+
+    /**
+     * Generate PDF report with Cyrillic support using OpenPDF
+     */
+    public static void generatePDF(ReportData data, String filePath) throws Exception {
+        Document document = new Document(PageSize.A4.rotate()); // Landscape for wider tables
+        PdfWriter.getInstance(document, new FileOutputStream(filePath));
+        document.open();
+
+        try {
+            // Create font that supports Cyrillic - using system font with UTF-8 encoding
+            // Try to use Arial (Windows) or fallback to embedded font
+            BaseFont baseFont;
+            try {
+                // Try loading Arial from system (supports Cyrillic with UTF-8)
+                baseFont = BaseFont.createFont("c:/windows/fonts/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+            } catch (Exception e) {
+                // Fallback to Times Roman with Cp1251 if Arial not available
+                baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, "Cp1251", BaseFont.EMBEDDED);
+            }
+
+            com.lowagie.text.Font titleFont = new com.lowagie.text.Font(baseFont, 14, com.lowagie.text.Font.BOLD);
+            com.lowagie.text.Font headerFont = new com.lowagie.text.Font(baseFont, 10, com.lowagie.text.Font.BOLD);
+            com.lowagie.text.Font cellFont = new com.lowagie.text.Font(baseFont, 9, com.lowagie.text.Font.NORMAL);
+            com.lowagie.text.Font boldCellFont = new com.lowagie.text.Font(baseFont, 9, com.lowagie.text.Font.BOLD);
+
+            // Add title
+            String[] titleLines = data.title.split("\n");
+            for (String line : titleLines) {
+                Paragraph titlePara = new Paragraph(line, titleFont);
+                titlePara.setAlignment(Element.ALIGN_LEFT);
+                titlePara.setSpacingAfter(5);
+                document.add(titlePara);
+            }
+
+            // Add spacing after title
+            document.add(new Paragraph(" "));
+
+            // Create table
+            PdfPTable table = new PdfPTable(data.headers.size());
+            table.setWidthPercentage(100);
+
+            // Add header cells
+            for (String header : data.headers) {
+                PdfPCell headerCell = new PdfPCell(new Phrase(header, headerFont));
+                headerCell.setBackgroundColor(Color.LIGHT_GRAY);
+                headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                headerCell.setPadding(5);
+                table.addCell(headerCell);
+            }
+
+            // Add data rows
+            for (List<String> rowData : data.rows) {
+                for (String cellData : rowData) {
+                    PdfPCell cell = new PdfPCell(new Phrase(cellData != null ? cellData : "", cellFont));
+                    cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    cell.setPadding(3);
+                    table.addCell(cell);
+                }
+            }
+
+            // Add total row if exists
+            if (data.hasTotalRow) {
+                for (String cellData : data.totalRowData) {
+                    PdfPCell cell = new PdfPCell(new Phrase(cellData != null ? cellData : "", boldCellFont));
+                    cell.setBackgroundColor(Color.LIGHT_GRAY);
+                    cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    cell.setPadding(3);
+                    table.addCell(cell);
+                }
+            }
+
+            document.add(table);
+        } finally {
+            document.close();
         }
     }
 

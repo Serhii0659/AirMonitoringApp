@@ -71,6 +71,9 @@ dependencies {
     implementation("org.apache.poi:poi:5.5.0")
     implementation("org.apache.poi:poi-ooxml:5.5.0")
 
+    // OpenPDF for PDF reports
+    implementation("com.github.librepdf:openpdf:1.3.30")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 }

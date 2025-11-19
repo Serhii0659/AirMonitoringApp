@@ -68,7 +68,7 @@ public class ReportsController {
         reportTypeComboBox.getSelectionModel().selectFirst();
 
         // Setup format types
-        formatComboBox.setItems(FXCollections.observableArrayList("Excel (XLSX)"));
+        formatComboBox.setItems(FXCollections.observableArrayList("Excel (XLSX)", "PDF"));
         formatComboBox.getSelectionModel().selectFirst();
 
         // Load stations
@@ -345,8 +345,15 @@ public class ReportsController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Зберегти звіт");
         fileChooser.setInitialFileName("report_" + System.currentTimeMillis());
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+
+        // Add extension filter based on selected format
+        if ("PDF".equals(format)) {
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        } else {
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Excel Files", "*.xlsx"));
+        }
 
         File file = fileChooser.showSaveDialog(stage);
         if (file == null) {
@@ -370,8 +377,12 @@ public class ReportsController {
                     reportData = generateMeasurementStatisticsReport();
                 }
 
-                // Generate Excel file
-                ReportGenerator.generateExcel(reportData, file.getAbsolutePath());
+                // Generate file based on format
+                if ("PDF".equals(format)) {
+                    ReportGenerator.generatePDF(reportData, file.getAbsolutePath());
+                } else {
+                    ReportGenerator.generateExcel(reportData, file.getAbsolutePath());
+                }
 
                 javafx.application.Platform.runLater(() -> {
                     statusLabel.setText("✅ Звіт успішно згенеровано: " + file.getName());
