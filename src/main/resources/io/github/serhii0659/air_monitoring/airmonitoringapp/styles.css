@@ -859,3 +859,145 @@
 .animated-glow {
     -fx-effect: dropshadow(gaussian, -fx-glow-color, 15, 0.7, 0, 0);
 }
+
+/* ============================================
+   Charts - BarChart, PieChart, LineChart
+   ============================================ */
+
+/* Основний фон графіка */
+.chart {
+    -fx-background-color: rgba(26, 31, 58, 0.8);
+    -fx-border-color: #00d9ff;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+}
+
+/* Фон області графіка */
+.chart-content {
+    -fx-background-color: transparent;
+}
+
+.chart-plot-background {
+    -fx-background-color: rgba(10, 14, 39, 0.5);
+}
+
+/* Заголовок графіка */
+.chart-title {
+    -fx-text-fill: #00d9ff;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* Легенда графіка - ТЕМНА ТЕМА */
+.chart-legend {
+    -fx-background-color: rgba(45, 53, 97, 0.9) !important;
+    -fx-border-color: #00d9ff;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #e0e6ed !important;
+    -fx-font-size: 13px;
+}
+
+.chart-legend-item-symbol {
+    -fx-background-color: #00d9ff;
+    -fx-background-radius: 3px;
+}
+
+/* Осі графіка */
+.axis {
+    -fx-tick-label-fill: #e0e6ed;
+    -fx-font-size: 12px;
+}
+
+.axis-label {
+    -fx-text-fill: #00d9ff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.axis-tick-mark {
+    -fx-stroke: #a8b2c1;
+}
+
+.axis-minor-tick-mark {
+    -fx-stroke: rgba(168, 178, 193, 0.3);
+}
+
+/* Лінії сітки */
+.chart-vertical-grid-lines {
+    -fx-stroke: rgba(168, 178, 193, 0.2);
+}
+
+.chart-horizontal-grid-lines {
+    -fx-stroke: rgba(168, 178, 193, 0.2);
+}
+
+.chart-vertical-zero-line,
+.chart-horizontal-zero-line {
+    -fx-stroke: rgba(0, 217, 255, 0.3);
+}
+
+/* BarChart стилі */
+.chart-bar {
+    -fx-bar-fill: #00d9ff;
+    -fx-background-color: #00d9ff;
+    -fx-effect: dropshadow(gaussian, rgba(0, 217, 255, 0.5), 5, 0.5, 0, 0);
+}
+
+.chart-bar:hover {
+    -fx-bar-fill: #00ffff;
+    -fx-background-color: #00ffff;
+    -fx-effect: dropshadow(gaussian, rgba(0, 255, 255, 0.7), 8, 0.7, 0, 0);
+}
+
+/* Різні кольори для серій даних */
+.default-color0.chart-bar { -fx-bar-fill: #00d9ff; -fx-background-color: #00d9ff; }
+.default-color1.chart-bar { -fx-bar-fill: #ff3366; -fx-background-color: #ff3366; }
+.default-color2.chart-bar { -fx-bar-fill: #00ff88; -fx-background-color: #00ff88; }
+.default-color3.chart-bar { -fx-bar-fill: #ffaa00; -fx-background-color: #ffaa00; }
+.default-color4.chart-bar { -fx-bar-fill: #aa00ff; -fx-background-color: #aa00ff; }
+.default-color5.chart-bar { -fx-bar-fill: #00aaff; -fx-background-color: #00aaff; }
+
+/* PieChart стилі */
+.chart-pie {
+    -fx-border-color: #1a1f3a;
+    -fx-border-width: 2px;
+}
+
+.chart-pie-label {
+    -fx-fill: #e0e6ed;
+    -fx-font-size: 12px;
+}
+
+.chart-pie-label-line {
+    -fx-stroke: #a8b2c1;
+    -fx-stroke-width: 1px;
+}
+
+/* Кольори сегментів PieChart */
+.default-color0.chart-pie { -fx-pie-color: #00d9ff; }
+.default-color1.chart-pie { -fx-pie-color: #ff3366; }
+.default-color2.chart-pie { -fx-pie-color: #00ff88; }
+.default-color3.chart-pie { -fx-pie-color: #ffaa00; }
+.default-color4.chart-pie { -fx-pie-color: #aa00ff; }
+.default-color5.chart-pie { -fx-pie-color: #00aaff; }
+.default-color6.chart-pie { -fx-pie-color: #ff6600; }
+.default-color7.chart-pie { -fx-pie-color: #66ff00; }
+
+/* Легенда для серій */
+.default-color0.chart-legend-item-symbol { -fx-background-color: #00d9ff; }
+.default-color1.chart-legend-item-symbol { -fx-background-color: #ff3366; }
+.default-color2.chart-legend-item-symbol { -fx-background-color: #00ff88; }
+.default-color3.chart-legend-item-symbol { -fx-background-color: #ffaa00; }
+.default-color4.chart-legend-item-symbol { -fx-background-color: #aa00ff; }
+.default-color5.chart-legend-item-symbol { -fx-background-color: #00aaff; }
+.default-color6.chart-legend-item-symbol { -fx-background-color: #ff6600; }
+.default-color7.chart-legend-item-symbol { -fx-background-color: #66ff00; }
+

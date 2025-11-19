@@ -33,6 +33,8 @@ public final class DbManager {
 
     public static boolean isConnected() { return connection != null; }
 
+    public static Connection getConnection() { return connection; }
+
     public static String getLastError() { return lastError; }
 
     public static List<String> getTables() {

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import io.github.serhii0659.air_monitoring.airmonitoringapp.CustomTitleBar?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="io.github.serhii0659.air_monitoring.airmonitoringapp.PM25HarmfulViewController"
+      style="-fx-background-color: linear-gradient(to bottom, #0a0e27, #1a1f3a); -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 15, 0, 0, 5);">
+
+    <!-- Custom Title Bar -->
+    <CustomTitleBar fx:id="titleBar" />
+
+    <!-- Content -->
+    <VBox spacing="15" VBox.vgrow="ALWAYS">
+        <padding>
+            <Insets top="15" right="15" bottom="15" left="15"/>
+        </padding>
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Region HBox.hgrow="ALWAYS" />
+            <Label text="📈" style="-fx-font-size: 24px;" />
+            <Label text="PM2.5 ШКІДЛИВИЙ РІВЕНЬ" styleClass="label-header" />
+            <Label text="📈" style="-fx-font-size: 24px;" />
+            <Region HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <!-- Station selection -->
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <Label text="Станція:" styleClass="label-info" />
+            <ComboBox fx:id="stationCombo" prefWidth="400" />
+            <Button text="📊 ЗАВАНТАЖИТИ ДАНІ" onAction="#onLoadData" styleClass="button-primary" />
+        </HBox>
+
+        <!-- Info Label -->
+        <Label fx:id="infoLabel" styleClass="label-info" wrapText="true"
+               text="Шкідливий рівень PM2.5: понад 35.4 μg/m³ (стандарт EPA)" />
+
+        <!-- Chart -->
+        <BarChart fx:id="barChart" VBox.vgrow="ALWAYS" animated="false" legendVisible="true"
+                  style="-fx-background-color: rgba(26, 31, 58, 0.8); -fx-border-color: #00d9ff; -fx-border-width: 1px; -fx-border-radius: 5px;">
+            <xAxis>
+                <CategoryAxis fx:id="xAxis" side="BOTTOM" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="yAxis" side="LEFT" />
+            </yAxis>
+        </BarChart>
+
+        <!-- Data Table -->
+        <TableView fx:id="dataTable" prefHeight="200" VBox.vgrow="SOMETIMES">
+            <columns>
+                <TableColumn fx:id="stationColumn" text="Станція" prefWidth="500" />
+                <TableColumn fx:id="countColumn" text="Кількість днів з шкідливим рівнем" prefWidth="250" />
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

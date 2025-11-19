@@ -1,0 +1,42 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import io.github.serhii0659.air_monitoring.airmonitoringapp.CustomTitleBar?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="io.github.serhii0659.air_monitoring.airmonitoringapp.VisualizationMenuController"
+      style="-fx-background-color: linear-gradient(to bottom, #0a0e27, #1a1f3a); -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 15, 0, 0, 5);">
+
+    <!-- Custom Title Bar -->
+    <CustomTitleBar fx:id="titleBar" />
+
+    <!-- Content -->
+    <VBox spacing="20" alignment="CENTER">
+        <padding>
+            <Insets top="20" right="35" bottom="25" left="35"/>
+        </padding>
+
+        <!-- Header -->
+        <Label text="⚡ ВІЗУАЛІЗАЦІЯ ДАНИХ ⚡" styleClass="label-title" style="-fx-font-size: 20px;" />
+
+        <!-- Visualization Options -->
+        <VBox spacing="15" alignment="CENTER" prefWidth="400">
+            <Button text="📊 PM2.5 та PM10 по областях" onAction="#onPM25PM10Visualization"
+                    styleClass="button-primary" prefWidth="400" prefHeight="55"
+                    style="-fx-font-size: 14px;" />
+
+            <Button text="📈 PM2.5 шкідливий рівень" onAction="#onPM25HarmfulVisualization"
+                    styleClass="button-primary" prefWidth="400" prefHeight="55"
+                    style="-fx-font-size: 14px;" />
+
+            <Button text="📉 Діоксид сірки (SO₂)" onAction="#onSO2Visualization"
+                    styleClass="button-primary" prefWidth="400" prefHeight="55"
+                    style="-fx-font-size: 14px;" />
+
+            <Button text="📊 Чадний газ (CO)" onAction="#onCOVisualization"
+                    styleClass="button-primary" prefWidth="400" prefHeight="55"
+                    style="-fx-font-size: 14px;" />
+        </VBox>
+    </VBox>
+</VBox>

@@ -199,6 +199,39 @@ public class DataViewController {
     }
 
     @FXML
+    private void onVisualization() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("visualization-menu.fxml"));
+            javafx.scene.Scene scene = new javafx.scene.Scene(loader.load(), 470, 390);
+
+            String css = getClass().getResource("styles.css").toExternalForm();
+            scene.getStylesheets().add(css);
+
+            javafx.stage.Stage vizStage = new javafx.stage.Stage();
+            vizStage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+            vizStage.setScene(scene);
+            vizStage.setTitle("Air Monitoring - Візуалізація");
+            vizStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            vizStage.initOwner(HelloApplication.getPrimaryStage());
+            vizStage.setResizable(false);
+            vizStage.centerOnScreen();
+
+            Stage mainStage = HelloApplication.getPrimaryStage();
+            vizStage.iconifiedProperty().addListener((obs, wasIconified, isNowIconified) -> {
+                if (mainStage != null) {
+                    mainStage.setIconified(isNowIconified);
+                }
+            });
+
+            vizStage.show();
+        } catch (Exception e) {
+            infoLabel.setText("❌ Помилка відкриття форми візуалізації: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void onDisconnect() {
         // Cancel any running task
         if (currentTask != null && currentTask.isRunning()) {

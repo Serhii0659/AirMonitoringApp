@@ -39,6 +39,7 @@
                         <ComboBox fx:id="tablesBox" prefWidth="280" />
                         <Button text="🔄 ОНОВИТИ" onAction="#onRefresh" />
                         <Button text="📊 ЗВІТИ" onAction="#onReports" styleClass="button-primary" />
+                        <Button text="📈 ВІЗУАЛІЗАЦІЯ" onAction="#onVisualization" styleClass="button-primary" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Button text="⏏ ВІДКЛЮЧИТИСЬ" onAction="#onDisconnect" styleClass="button-danger" />
                     </HBox>
