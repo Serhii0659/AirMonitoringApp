@@ -6,16 +6,14 @@
 
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="io.github.serhii0659.air_monitoring.airmonitoringapp.LoginController"
+      prefWidth="500"
       style="-fx-background-color: linear-gradient(to bottom, #0a0e27, #1a1f3a); -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 15, 0, 0, 5);">
 
-    <!-- Custom Title Bar -->
     <CustomTitleBar fx:id="titleBar" />
 
-    <!-- Content -->
     <VBox spacing="20" alignment="CENTER" styleClass="vbox-container">
         <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
 
-        <!-- Card Container -->
         <VBox styleClass="card" spacing="20" alignment="CENTER" maxWidth="400">
             <VBox styleClass="card-header" alignment="CENTER" spacing="5">
                 <Label text="AIR MONITORING" styleClass="label-header" />
@@ -31,19 +29,23 @@
                         <ColumnConstraints hgrow="ALWAYS"/>
                     </columnConstraints>
                     <children>
-                        <Label text="Логін:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="label-info" />
-                        <TextField fx:id="usernameField" promptText="Введіть логін"
-                                  GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Label text="База даних:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="label-info" />
+                        <TextField fx:id="dbNameField" promptText="Назва бази даних"
+                                   GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
-                        <Label text="Пароль:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="label-info" />
+                        <Label text="Логін:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="label-info" />
+                        <TextField fx:id="usernameField" promptText="Введіть логін"
+                                   GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                        <Label text="Пароль:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="label-info" />
                         <PasswordField fx:id="passwordField" promptText="Введіть пароль"
-                                      GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                                       GridPane.rowIndex="2" GridPane.columnIndex="1" />
                     </children>
                 </GridPane>
 
                 <HBox alignment="CENTER">
                     <Button text="ПІДКЛЮЧИТИСЯ" onAction="#onConnect"
-                           styleClass="button-primary" prefWidth="200" />
+                            styleClass="button-primary" prefWidth="200" />
                 </HBox>
 
                 <Label fx:id="statusLabel" wrapText="true" alignment="CENTER" />

@@ -10,9 +10,27 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
+import java.util.List;
+import java.util.ArrayList;
 
 public class DataViewController {
-    @FXML private ComboBox<String> tablesBox;
+
+    private static class TableInfo {
+        final String originalName;  // English name for database queries
+        final String displayName;   // Ukrainian name for UI display
+
+        TableInfo(String originalName, String displayName) {
+            this.originalName = originalName;
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName; // ComboBox will display this
+        }
+    }
+
+    @FXML private ComboBox<TableInfo> tablesBox;
     @FXML private TableView<ObservableList<String>> tableView;
     @FXML private Label infoLabel;
     @FXML private Label usernameLabel;
@@ -43,7 +61,7 @@ public class DataViewController {
 
     // Previous state for cancellation
     private DataLoadResult previousResult;
-    private String previousTable;
+    private TableInfo previousTable;
     private int previousTotalRecords;
     private boolean previousShowAllState;
     private int previousPage;
@@ -56,6 +74,60 @@ public class DataViewController {
 
     // Reports window tracking - to prevent multiple instances
     private static javafx.stage.Stage reportsWindow = null;
+
+    private static final java.util.Map<String, String> COLUMN_TRANSLATIONS = new java.util.HashMap<>();
+    private static final java.util.Map<String, String> TABLE_TRANSLATIONS = new java.util.HashMap<>();
+
+    static {
+        // Заповнюємо переклади таблиць (лише один раз при запуску)
+        TABLE_TRANSLATIONS.put("station", "Станції");
+        TABLE_TRANSLATIONS.put("category", "Категорії");
+        TABLE_TRANSLATIONS.put("measured_unit", "Одиниці виміру");
+        TABLE_TRANSLATIONS.put("measurment", "Вимірювання");
+        TABLE_TRANSLATIONS.put("coordinates", "Координати");
+        TABLE_TRANSLATIONS.put("optimal_value", "Оптимальні значення");
+        TABLE_TRANSLATIONS.put("mqtt_server", "MQTT Сервери");
+        TABLE_TRANSLATIONS.put("mqtt_message_unit", "MQTT Повідомлення");
+        TABLE_TRANSLATIONS.put("favorite_station", "Улюблені станції");
+
+        // Заповнюємо переклади колонок
+        COLUMN_TRANSLATIONS.put("id_station", "ID Станції");
+        COLUMN_TRANSLATIONS.put("id_server", "ID Сервера");
+        COLUMN_TRANSLATIONS.put("id_category", "ID Категорії");
+        COLUMN_TRANSLATIONS.put("id_measured_unit", "ID Виміру");
+        COLUMN_TRANSLATIONS.put("id_measurment", "ID Вимірювання");
+        COLUMN_TRANSLATIONS.put("id_saveecobot", "ID SaveEcoBot");
+        COLUMN_TRANSLATIONS.put("city", "Місто");
+        COLUMN_TRANSLATIONS.put("name", "Назва");
+        COLUMN_TRANSLATIONS.put("status", "Статус");
+        COLUMN_TRANSLATIONS.put("location", "Координати");
+        COLUMN_TRANSLATIONS.put("url", "URL");
+        COLUMN_TRANSLATIONS.put("designation", "Позначення");
+        COLUMN_TRANSLATIONS.put("title", "Назва параметру");
+        COLUMN_TRANSLATIONS.put("unit", "Одиниця виміру");
+        COLUMN_TRANSLATIONS.put("bottom_border", "Нижня границя");
+        COLUMN_TRANSLATIONS.put("upper_border", "Верхня границя");
+        COLUMN_TRANSLATIONS.put("time", "Час");
+        COLUMN_TRANSLATIONS.put("value", "Значення");
+        COLUMN_TRANSLATIONS.put("message", "Повідомлення");
+        COLUMN_TRANSLATIONS.put("order", "Порядок");
+        COLUMN_TRANSLATIONS.put("user_name", "Ім'я користувача");
+        COLUMN_TRANSLATIONS.put("parameters", "Параметри");
+    }
+
+    private void updateWindowStyle(javafx.scene.Parent root, boolean isMaximized) {
+        if (isMaximized) {
+            root.getStyleClass().remove("window-rounded");
+            if (!root.getStyleClass().contains("window-square")) {
+                root.getStyleClass().add("window-square");
+            }
+        } else {
+            root.getStyleClass().remove("window-square");
+            if (!root.getStyleClass().contains("window-rounded")) {
+                root.getStyleClass().add("window-rounded");
+            }
+        }
+    }
 
     @FXML
     private void initialize() {
@@ -77,18 +149,12 @@ public class DataViewController {
 
                 javafx.scene.Parent root = stage.getScene().getRoot();
                 if (root != null) {
-                    // Start with no rounded corners (default for data window which opens maximized)
-                    root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 0;");
+                    // Ініціалізація
+                    updateWindowStyle(root, stage.isMaximized());
 
-                    // Setup listener for maximized state to control background radius
+                    // Слухач
                     stage.maximizedProperty().addListener((obs, wasMaximized, isNowMaximized) -> {
-                        if (isNowMaximized) {
-                            // Remove rounded corners when maximized
-                            root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 0;");
-                        } else {
-                            // Add rounded corners when not maximized
-                            root.setStyle(root.getStyle().replaceAll("-fx-background-radius:\\s*\\d+;?", "") + "; -fx-background-radius: 10;");
-                        }
+                        updateWindowStyle(root, isNowMaximized);
                     });
                 }
             });
@@ -136,10 +202,34 @@ public class DataViewController {
     }
 
     private void refreshTables() {
-        tablesBox.getItems().setAll(DbManager.getTables());
-        if (!tablesBox.getItems().isEmpty()) tablesBox.getSelectionModel().selectFirst();
-        infoLabel.setText(DbManager.isConnected() ? "✓ Підключено до бази даних" : "✗ Немає з'єднання");
-        loadSelectedTable();
+        infoLabel.setText("⏳ Отримання списку таблиць...");
+
+        // Створюємо фонове завдання
+        Task<List<TableInfo>> task = new Task<>() {
+            @Override
+            protected List<TableInfo> call() throws Exception {
+                List<String> englishTables = DbManager.getTables();
+                List<TableInfo> tableInfoList = new ArrayList<>();
+                for (String tableName : englishTables) {
+                    String translated = translateTableName(tableName);
+                    tableInfoList.add(new TableInfo(tableName, translated));
+                }
+                return tableInfoList;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            tablesBox.getItems().setAll(task.getValue());
+            if (!tablesBox.getItems().isEmpty()) tablesBox.getSelectionModel().selectFirst();
+            infoLabel.setText(DbManager.isConnected() ? "✓ Підключено до бази даних" : "✗ Немає з'єднання");
+            loadSelectedTable(); // Тепер це безпечно викликати тут
+        });
+
+        task.setOnFailed(e -> {
+            infoLabel.setText("❌ Помилка отримання таблиць: " + task.getException().getMessage());
+        });
+
+        new Thread(task).start();
     }
 
     @FXML
@@ -308,7 +398,7 @@ public class DataViewController {
                     updatePaginationUI();
 
                     // Restore table data
-                    displayData(previousResult, previousTable, previousTotalRecords);
+                    displayData(previousResult, previousTable.originalName, previousTotalRecords);
                     infoLabel.setText("⚠ Завантаження скасовано - відновлено попередній стан");
                 } finally {
                     // Re-enable listeners after a short delay to ensure UI updates complete
@@ -322,10 +412,6 @@ public class DataViewController {
         }
     }
 
-
-    /**
-     * Save current state for potential cancellation/restore
-     */
     private void saveCurrentState() {
         if (tableView.getItems() != null && !tableView.getItems().isEmpty()) {
             previousResult = new DataLoadResult();
@@ -341,9 +427,6 @@ public class DataViewController {
         }
     }
 
-    /**
-     * Save current state with explicit checkbox state (used in checkbox listener)
-     */
     private void saveCurrentStateWithCheckbox(boolean checkboxState) {
         if (tableView.getItems() != null && !tableView.getItems().isEmpty()) {
             previousResult = new DataLoadResult();
@@ -359,18 +442,15 @@ public class DataViewController {
         }
     }
 
-    /**
-     * Save current state with explicit table name (used in table selection listener)
-     */
-    private void saveCurrentStateWithTable(String tableName) {
-        if (tableView.getItems() != null && !tableView.getItems().isEmpty() && tableName != null) {
+    private void saveCurrentStateWithTable(TableInfo table) {
+        if (tableView.getItems() != null && !tableView.getItems().isEmpty() && table != null) {
             previousResult = new DataLoadResult();
             previousResult.data = javafx.collections.FXCollections.observableArrayList(tableView.getItems());
             previousResult.columnNames = new java.util.ArrayList<>();
             for (TableColumn<ObservableList<String>, ?> col : tableView.getColumns()) {
                 previousResult.columnNames.add(col.getText());
             }
-            previousTable = tableName; // Use the provided table name (old value from listener)
+            previousTable = table; // Use the provided table (old value from listener)
             previousTotalRecords = totalRecords;
             previousShowAllState = showAllCheckBox.isSelected();
             previousPage = currentPage;
@@ -378,8 +458,11 @@ public class DataViewController {
     }
 
     private void loadSelectedTable() {
-        String table = tablesBox.getValue();
-        if (table == null) return;
+        TableInfo tableInfo = tablesBox.getValue();
+        if (tableInfo == null) return;
+
+        // Use original English name for database query
+        String table = tableInfo.originalName;
 
         // Cancel any running task
         if (currentTask != null && currentTask.isRunning()) {
@@ -556,13 +639,16 @@ public class DataViewController {
 
         for (int i = 0; i < result.columnNames.size(); i++) {
             final int colIndex = i;
-            String columnName = result.columnNames.get(i);
-            TableColumn<ObservableList<String>, String> col = new TableColumn<>(columnName);
+            String originalColumnName = result.columnNames.get(i);
+            String translatedColumnName = translateColumnName(originalColumnName);
+
+            TableColumn<ObservableList<String>, String> col = new TableColumn<>(translatedColumnName);
             col.setCellValueFactory(param ->
                 new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex)));
 
             // Calculate optimal and max width based on actual content
-            ColumnWidthInfo widthInfo = calculateColumnWidth(columnName, result.data, colIndex);
+            // Use both names: translated for display width, original for smart limits logic
+            ColumnWidthInfo widthInfo = calculateColumnWidth(originalColumnName, translatedColumnName, result.data, colIndex);
 
             col.setPrefWidth(widthInfo.optimalWidth);
             col.setMinWidth(widthInfo.minWidth);
@@ -571,8 +657,8 @@ public class DataViewController {
             // Left align column headers
             col.setStyle("-fx-alignment: CENTER-LEFT;");
 
-            // Configure sorting behavior
-            configureSorting(col, columnName, result.data.size(), totalCount);
+            // Configure sorting behavior (use translated name for display)
+            configureSorting(col, translatedColumnName, result.data.size(), totalCount);
 
             // For large datasets: disable auto-resize to prevent freeze
             if (isLargeDataset) {
@@ -620,9 +706,6 @@ public class DataViewController {
         infoLabel.setText(info);
     }
 
-    /**
-     * Block header interactions that cause freeze on large datasets
-     */
     private void blockHeaderInteractions(TableView<?> table) {
         // Method 1: Block at skin level
         table.skinProperty().addListener((obs, oldSkin, newSkin) -> {
@@ -695,9 +778,6 @@ public class DataViewController {
         });
     }
 
-    /**
-     * Create a custom resize policy that prevents auto-resize operations for large datasets
-     */
     private javafx.util.Callback<TableView.ResizeFeatures, Boolean> createNoAutoResizePolicy() {
         return new javafx.util.Callback<TableView.ResizeFeatures, Boolean>() {
             @Override
@@ -755,9 +835,6 @@ public class DataViewController {
         }
     }
 
-    /**
-     * Add tooltip for columns where sorting is disabled (without changing column text)
-     */
     private void addSortingDisabledTooltip(TableColumn<ObservableList<String>, String> col) {
         javafx.scene.control.Tooltip tooltip = new javafx.scene.control.Tooltip(
             "⚠ Обмеження для великої таблиці:\n" +
@@ -778,9 +855,6 @@ public class DataViewController {
         });
     }
 
-    /**
-     * Get sorting status info for the info label
-     */
     private String getSortingStatusInfo(int displayedRecords, int totalRecords) {
         if (USE_DB_SORTING) {
             return " │ Сортування: БД";
@@ -810,25 +884,25 @@ public class DataViewController {
     }
     */
 
-    /**
-     * Calculate header width based on text length (approximation)
-     */
     private int getHeaderWidth(String headerText) {
-        // Approximate: 8 pixels per character + padding
-        int textWidth = headerText.length() * 8 + 20; // 20px padding
-        return Math.max(textWidth, 60); // Minimum 60px
+        // Approximate: 10 pixels per character (Ukrainian chars may be wider) + padding
+        // Additional space for column menu button and sorting icons
+        int textWidth = headerText.length() * 10 + 50; // 50px padding for icons and spacing
+        return Math.max(textWidth, 80); // Minimum 80px
     }
 
     /**
      * Calculate optimal and maximum column width based on header and content
+     * @param originalColumnName - original English column name for smart limits logic
+     * @param displayColumnName - translated/display column name for width calculation
+     * @param data - table data
+     * @param colIndex - column index
      */
-    private ColumnWidthInfo calculateColumnWidth(String columnName, ObservableList<ObservableList<String>> data, int colIndex) {
-        // Start with header width as minimum
-        int headerWidth = getHeaderWidth(columnName);
+    private ColumnWidthInfo calculateColumnWidth(String originalColumnName, String displayColumnName,
+                                                 ObservableList<ObservableList<String>> data, int colIndex) {
+        int headerWidth = getHeaderWidth(displayColumnName);
 
-        // Sample rows to get content width estimate
         int maxContentWidth = headerWidth;
-        // For small tables - check all rows, for large tables - sample 200 rows
         int sampleSize = data.size() <= SORTING_THRESHOLD ? data.size() : 200;
 
         for (int i = 0; i < sampleSize; i++) {
@@ -836,70 +910,66 @@ public class DataViewController {
             if (colIndex < row.size()) {
                 String cellValue = row.get(colIndex);
                 if (cellValue != null && !cellValue.isEmpty()) {
-                    // Approximate content width: 7 pixels per character
-                    int contentWidth = cellValue.length() * 7 + 15; // 15px padding
+                    int contentWidth = cellValue.length() * 7 + 15;
                     maxContentWidth = Math.max(maxContentWidth, contentWidth);
                 }
             }
         }
 
-        // Calculate optimal width with smart rules
-        int optimalWidth = applySmartLimits(columnName.toLowerCase(), maxContentWidth);
+        String lowerCaseName = originalColumnName.toLowerCase();
 
-        // Calculate maximum width - allow wider than optimal but with reasonable limits
-        int maxWidth = calculateMaxWidth(columnName.toLowerCase(), maxContentWidth);
+        int optimalWidth = applySmartLimits(lowerCaseName, maxContentWidth);
+        optimalWidth = Math.max(optimalWidth, headerWidth);
+
+        int maxWidth = calculateMaxWidth(lowerCaseName, maxContentWidth);
+        maxWidth = Math.max(maxWidth, optimalWidth);
 
         return new ColumnWidthInfo(optimalWidth, maxWidth, headerWidth);
     }
 
-    /**
-     * Calculate maximum allowed width for a column based on actual content
-     */
     private int calculateMaxWidth(String columnName, int actualMaxContentWidth) {
         // ID columns - strict limit
         if (columnName.equals("id") || columnName.endsWith("_id") ||
             columnName.startsWith("id_") || columnName.matches(".*\\bid\\b.*")) {
-            return Math.min(actualMaxContentWidth, 120); // Slightly more than optimal
+            return Math.min(actualMaxContentWidth, 180);
         }
 
         // Date/time columns
         if (columnName.contains("date") || columnName.contains("time") ||
             columnName.contains("created") || columnName.contains("updated")) {
-            return Math.min(actualMaxContentWidth, 220); // Allow for longer timestamps
+            return Math.min(actualMaxContentWidth, 250);
         }
 
         // Measurement values
         if (columnName.contains("value") || columnName.contains("measurement") ||
             columnName.contains("level") || columnName.contains("concentration")) {
-            return Math.min(actualMaxContentWidth, 200);
+            return Math.min(actualMaxContentWidth, 220);
         }
 
         // Description/comment fields - allow much wider
         if (columnName.contains("description") || columnName.contains("comment") ||
-            columnName.contains("note") || columnName.contains("remarks")) {
-            return Math.min(actualMaxContentWidth, 500); // Wider for text content
+            columnName.contains("note") || columnName.contains("remarks") ||
+            columnName.contains("designation")) {
+            return Math.min(actualMaxContentWidth, 600);
         }
 
         // Coordinate/location columns
         if (columnName.contains("coordinate") || columnName.contains("location") ||
             columnName.contains("address") || columnName.contains("latitude") ||
             columnName.contains("longitude")) {
-            return Math.min(actualMaxContentWidth, 350);
+            return Math.min(actualMaxContentWidth, 400);
         }
 
         // Name/title columns
         if (columnName.contains("name") || columnName.contains("title") ||
             columnName.contains("type") || columnName.contains("status")) {
-            return Math.min(actualMaxContentWidth, 250);
+            return Math.min(actualMaxContentWidth, 300);
         }
 
         // General limit - based on actual content but reasonable
-        return Math.min(actualMaxContentWidth, 400);
+        return Math.min(actualMaxContentWidth, 500);
     }
 
-    /**
-     * Helper class to return both optimal and max width
-     */
     private static class ColumnWidthInfo {
         final int optimalWidth;
         final int maxWidth;
@@ -912,49 +982,47 @@ public class DataViewController {
         }
     }
 
-    /**
-     * Apply smart limits based on column type
-     */
     private int applySmartLimits(String columnName, int calculatedWidth) {
-        // ID columns - never more than 100px
+        // ID columns - never more than 120px
         if (columnName.equals("id") || columnName.endsWith("_id") ||
             columnName.startsWith("id_") || columnName.matches(".*\\bid\\b.*")) {
-            return Math.min(calculatedWidth, 100);
+            return Math.min(calculatedWidth, 150);
         }
 
         // Date/time columns - reasonable limit
         if (columnName.contains("date") || columnName.contains("time") ||
             columnName.contains("created") || columnName.contains("updated")) {
-            return Math.min(calculatedWidth, 180);
+            return Math.min(calculatedWidth, 200);
         }
 
         // Measurement values - medium limit
         if (columnName.contains("value") || columnName.contains("measurement") ||
             columnName.contains("level") || columnName.contains("concentration")) {
-            return Math.min(calculatedWidth, 150);
+            return Math.min(calculatedWidth, 180);
         }
 
         // Description/comment fields - larger but not huge
         if (columnName.contains("description") || columnName.contains("comment") ||
-            columnName.contains("note") || columnName.contains("remarks")) {
-            return Math.min(calculatedWidth, 350);
+            columnName.contains("note") || columnName.contains("remarks") ||
+            columnName.contains("designation")) {
+            return Math.min(calculatedWidth, 400);
         }
 
         // Coordinate/location columns - wide but limited
         if (columnName.contains("coordinate") || columnName.contains("location") ||
             columnName.contains("address") || columnName.contains("latitude") ||
             columnName.contains("longitude")) {
-            return Math.min(calculatedWidth, 280);
+            return Math.min(calculatedWidth, 320);
         }
 
         // Name/title columns - medium-wide
         if (columnName.contains("name") || columnName.contains("title") ||
             columnName.contains("type") || columnName.contains("status")) {
-            return Math.min(calculatedWidth, 200);
+            return Math.min(calculatedWidth, 250);
         }
 
         // General limit - prevent extremely wide columns
-        return Math.min(calculatedWidth, 300);
+        return Math.min(calculatedWidth, 350);
     }
 
     private void showLoadingOverlay() {
@@ -994,9 +1062,6 @@ public class DataViewController {
         });
     }
 
-    /**
-     * Customize table menu button (плюсик) for better visibility
-     */
     private void customizeTableMenuButton(TableView<?> table) {
         javafx.scene.Node menuButton = table.lookup(".show-hide-columns-button");
         if (menuButton instanceof javafx.scene.control.Button) {
@@ -1022,5 +1087,15 @@ public class DataViewController {
             );
             button.setTooltip(tooltip);
         }
+    }
+
+    private String translateColumnName(String columnName) {
+        if (columnName == null) return "";
+        return COLUMN_TRANSLATIONS.getOrDefault(columnName.toLowerCase(), columnName);
+    }
+
+    private String translateTableName(String tableName) {
+        if (tableName == null) return "";
+        return TABLE_TRANSLATIONS.getOrDefault(tableName.toLowerCase(), tableName);
     }
 }

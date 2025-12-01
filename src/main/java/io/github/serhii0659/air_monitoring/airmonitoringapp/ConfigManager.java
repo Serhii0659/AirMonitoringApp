@@ -86,6 +86,12 @@ public final class ConfigManager {
         return properties.getProperty("db.name");
     }
 
+    public static void setDbName(String dbName) {
+        if (properties != null) {
+            properties.setProperty("db.name", dbName);
+        }
+    }
+
     public static String getDbUser() {
         return properties.getProperty("db.user");
     }

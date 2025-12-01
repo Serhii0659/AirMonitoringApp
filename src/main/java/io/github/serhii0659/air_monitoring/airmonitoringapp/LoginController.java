@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
 public class LoginController {
+    @FXML private TextField dbNameField;
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private Label statusLabel;
@@ -16,77 +17,94 @@ public class LoginController {
 
     @FXML
     private void initialize() {
-        // Initialize title bar
         Stage stage = HelloApplication.getPrimaryStage();
         if (titleBar != null && stage != null) {
             titleBar.init("Air Monitoring - Вхід", stage, false, true);
-
-            // Remove rounded background for non-maximized window
             Platform.runLater(() -> {
                 javafx.scene.Parent root = titleBar.getScene().getRoot();
                 if (root != null) {
-                    // Remove background radius for login window (never maximized)
                     root.setStyle(root.getStyle() + "; -fx-background-radius: 0;");
                 }
             });
         }
 
-        // Setup Enter key handlers
+        dbNameField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) usernameField.requestFocus();
+        });
         usernameField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                passwordField.requestFocus();
-            }
+            if (event.getCode() == KeyCode.ENTER) passwordField.requestFocus();
         });
-
         passwordField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                onConnect();
-            }
+            if (event.getCode() == KeyCode.ENTER) onConnect();
         });
 
-        // Auto-focus on username field after UI is loaded
-        Platform.runLater(() -> usernameField.requestFocus());
+        Platform.runLater(() -> dbNameField.requestFocus());
 
-        // Check if config is loaded
         String configError = ConfigManager.getLastError();
         if (configError != null) {
-            statusLabel.setText("Помилка конфігурації: " + configError);
-            statusLabel.getStyleClass().add("label-error");
+            showError("Помилка конфігурації: " + configError);
             return;
         }
 
-        // Auto-fill credentials from config if available
+        String dbName = ConfigManager.getDbName();
         String user = ConfigManager.getDbUser();
         String password = ConfigManager.getDbPassword();
 
-        if (user != null && !user.isEmpty()) {
-            usernameField.setText(user);
-        }
-        if (password != null && !password.isEmpty()) {
-            passwordField.setText(password);
+        if (dbName != null && !dbName.isEmpty()) dbNameField.setText(dbName);
+        if (user != null && !user.isEmpty()) usernameField.setText(user);
+        if (password != null && !password.isEmpty()) passwordField.setText(password);
+
+        if (dbName != null && !dbName.isEmpty()) {
+            Platform.runLater(() -> usernameField.requestFocus());
         }
     }
 
     @FXML
     private void onConnect() {
-        String user = usernameField.getText().trim();
-        String pass = passwordField.getText();
-        if (user.isEmpty()) {
-            statusLabel.setText("Введіть логін");
+        String dbNameInput = dbNameField.getText().trim();
+        String userInput = usernameField.getText().trim();
+        String passInput = passwordField.getText();
+
+        if (dbNameInput.isEmpty()) {
+            showError("Введіть назву бази даних");
             return;
         }
-        boolean ok = DbManager.connect(user, pass);
+
+        if (userInput.isEmpty()) {
+            showError("Введіть логін");
+            return;
+        }
+
+        ConfigManager.setDbName(dbNameInput);
+
+        boolean ok = DbManager.connect(userInput, passInput);
+
         if (!ok) {
-            statusLabel.setText("Помилка: " + DbManager.getLastError());
-            statusLabel.getStyleClass().add("label-error");
+            showError("Помилка: " + DbManager.getLastError());
             return;
         }
+
         statusLabel.setText("Успішно підключено");
+        statusLabel.getStyleClass().remove("label-error");
         statusLabel.getStyleClass().add("label-success");
 
-        // Save current username for display
-        HelloApplication.setCurrentUsername(user);
-
+        HelloApplication.setCurrentUsername(userInput);
         HelloApplication.showDataWindow();
+    }
+
+    private void showError(String message) {
+        statusLabel.setText(message);
+        statusLabel.getStyleClass().remove("label-success");
+        statusLabel.getStyleClass().add("label-error");
+        resizeWindow();
+    }
+
+    private void resizeWindow() {
+        Platform.runLater(() -> {
+            Stage stage = HelloApplication.getPrimaryStage();
+            if (stage != null && stage.isShowing()) {
+                stage.sizeToScene();
+            }
+        });
     }
 }
